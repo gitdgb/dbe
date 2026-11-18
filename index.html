@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>Painel de monitorização · ESP32-CAM</title>
+<style>
+:root{color-scheme:dark;--bg:#09111e;--panel:#121d2e;--panel2:#18263a;--line:#2a3b53;--text:#edf4ff;--muted:#9aabc2;--green:#16845a;--green2:#1db779;--red:#a8323d;--amber:#94620e;--blue:#285f9d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#1b2c43 0,var(--bg) 58%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}main{width:min(1120px,100%);margin:auto;padding:16px 12px 38px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 2px 15px}h1{font-size:clamp(20px,5vw,29px);margin:0;letter-spacing:.015em}h2{font-size:16px;margin:0 0 12px}h3{font-size:15px;margin:0}.subtitle,.hint{color:var(--muted);font-size:11px;line-height:1.45}.subtitle{margin-top:3px}
+.card,.camera{background:rgba(18,29,46,.97);border:1px solid var(--line);border-radius:17px;padding:14px;margin-bottom:12px;box-shadow:0 12px 34px #0002}.status-global,.cam-online,.pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:99px;background:#20334a;color:#c2cfdf;font-size:11px;font-weight:750;white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:#8795a8}.status-global.on .dot,.cam-online.on .dot{background:#29c782;box-shadow:0 0 9px #29c782}.cam-online.off .dot{background:#ef6461}.cam-online.wait .dot{background:#e1ad47}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}label{display:grid;gap:6px;color:var(--muted);font-size:12px}input,select{width:100%;min-width:0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#0c1625;color:var(--text);font:inherit;font-size:14px;outline:none}input:focus,select:focus{border-color:#4b9b7c}
+button{border:0;border-radius:10px;padding:11px 12px;min-height:43px;color:white;background:var(--blue);font:inherit;font-size:12px;font-weight:750;cursor:pointer;transition:filter .15s,transform .08s}button:active{transform:scale(.985)}button:disabled{opacity:.38;cursor:not-allowed}.row{display:flex;gap:8px;margin-top:9px}.row>*{flex:1}.secondary{background:#293950}.danger{background:#87313b}.primary{background:#2865a6}.feedback{padding:11px 12px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:12px;margin-top:10px;min-height:40px}
+.selector{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.selector button{background:#20334a}.selector button.selected{background:#126344;outline:2px solid #31c58a}.settings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.settings .wide{grid-column:span 2}.camera-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.camera{margin:0;padding:12px;background:#0e1929;min-width:0}.camhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.cam-online{font-size:10px;padding:5px 8px}.cam-online.on{background:#124d39;color:#a6f1cd}.cam-online.off{background:#5b2930;color:#ffc4c4}.cam-online.wait{background:#5b461d;color:#ffe0a0}
+.pill{background:#293950;padding:5px 8px;font-size:10px}.pill.active{background:#124d39;color:#a6f1cd}.pill.recording{background:#654516;color:#ffe0a0}.preview{aspect-ratio:4/3;background:#050b14;border:1px solid #26364d;border-radius:11px;display:grid;place-items:center;overflow:hidden;color:#71839b;font-size:12px;text-align:center}.preview img{width:100%;height:100%;object-fit:contain}.cam-state{font-size:11px;color:var(--muted);margin:8px 1px;min-height:16px;overflow-wrap:anywhere}.actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.actions button{padding:9px 5px;font-size:11px;background:#126344}.actions button:active{background:#8d3038}.actions .live.active,.actions .rec.active,.actions .flash.active{background:#8d3038}
+.record-tools,.system-tools{margin-top:12px;padding-top:11px;border-top:1px solid var(--line)}.tools-title{font-size:10px;font-weight:850;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;text-transform:uppercase}.record-tools-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}.record-tools-actions button,.system-tools button{background:#293950;font-size:11px;padding:9px 6px}.recordings{display:grid;gap:6px;margin-top:9px}.recitem{display:flex;align-items:center;gap:6px;padding:8px;background:#18263a;border:1px solid var(--line);border-radius:9px;font-size:11px}.recitem span{flex:1;overflow-wrap:anywhere;min-width:0}.recitem button{min-height:34px;padding:6px 8px;font-size:10px}.recitem .delete{background:#87313b}.system-tools{margin-top:12px}.system-tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.system-tools-grid button{min-height:40px}.system-tools-grid button.sleep-btn{background:#16845a}.system-tools-grid button.sleep-btn.sleeping{background:#a3132b}.system-tools-grid button.sleep-btn.waking{background:#ff0033;color:#fff;box-shadow:0 0 0 2px #ff667f,0 0 18px #ff003f;animation:sleepBlink .65s steps(2,start) infinite}@keyframes sleepBlink{to{background:#c90024;box-shadow:0 0 0 2px #ff334f,0 0 10px #ff0033}}.poll-setting{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:end;margin-top:9px}.poll-setting label{min-width:0}.poll-setting select{padding:9px;font-size:12px}.poll-setting button{background:#293950;min-height:39px}.poll-highlight{margin-top:9px;padding:11px 12px;border-radius:9px;background:#203b53;border:1px solid #5a83a5;color:#f2f8ff;font-size:14px;font-weight:900;letter-spacing:.01em;box-shadow:0 0 0 1px #42617e55}.diagnostic{padding:9px;margin-top:9px;border-radius:9px;background:#111e30;color:var(--muted);font-size:11px;line-height:1.55;overflow-wrap:anywhere;min-height:42px}.extra{display:flex;gap:7px;flex-wrap:wrap}.extra button{background:#293950}.footer{color:var(--muted);font-size:10px;text-align:center;padding:8px 4px}
+@media(max-width:680px){main{padding:11px 9px 28px}.camera-grid{grid-template-columns:1fr}.fields{grid-template-columns:1fr}.settings{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:12px}header{align-items:flex-start}.actions button{font-size:11px}.cam-online{font-size:9px}}
+@media(max-width:360px){.actions{grid-template-columns:1fr 1fr}}
+
+.cam-status-right{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;min-width:0}
+</style>
+</head>
+<body>
+<main>
+<header><div><h1>PAINEL DE CÂMARAS</h1><div class="subtitle">Monitorização e Controlo Remoto</div></div><div id="mqttStatus" class="status-global"><i class="dot"></i><span id="mqttStatusText">MQTT desligado</span></div></header>
+
+<section class="card">
+<h2>Ligação ao servidor</h2>
+<div class="fields">
+<label>Utilizador<input id="username" autocomplete="username" placeholder="Utilizador"></label>
+<label>Password<input id="password" type="password" autocomplete="current-password" placeholder="Password"></label>
+</div>
+<div class="row"><button id="connect" class="primary">Ligar</button><button id="disconnect" class="secondary" disabled>Desligar</button></div>
+<div id="feedback" class="feedback" aria-live="polite"></div>
+</section>
+
+<section class="card">
+<h2>Definições gerais e imagem</h2>
+<div class="tools-title">Aplicar configurações a</div>
+<div class="selector"><button data-select="1" class="selected">Câmara 1</button><button data-select="2">Câmara 2</button><button data-select="both">Todas</button></div>
+<p class="hint"></p>
+<div class="tools-title" style="margin-top:14px">Imagem e desempenho</div>
+<div class="settings">
+<label class="wide">Resolução<select id="resolution"><option value="QVGA">QVGA · 320 × 240</option><option value="VGA">VGA · 640 × 480</option><option value="SVGA">SVGA · 800 × 600</option><option value="XGA">XGA · 1024 × 768</option><option value="SXGA">SXGA · 1280 × 1024</option><option value="UXGA">UXGA · 1600 × 1200</option></select></label>
+<label>Qualidade JPEG<input id="quality" type="number" min="10" max="63" value="15"></label>
+<label>FPS<input id="fps" type="number" min="1" max="30" value="10"></label>
+</div>
+<div class="row"><button id="applySettings" disabled>Aplicar às câmaras selecionadas</button></div>
+<p class="hint">JPEG 10 = maior qualidade e ficheiros maiores; 63 = maior compressão. Sem PSRAM, o firmware limita a resolução a QVGA/VGA. Com duas câmaras em simultâneo, começa por QVGA ou VGA e FPS moderado.</p>
+</section>
+
+<section class="card">
+<h2></h2>
+<div class="camera-grid">
+<article class="camera" id="camera1">
+ <div class="camhead"><h3>Câmara 1</h3><div class="cam-status-right"><span id="online1" class="cam-online wait"><i class="dot"></i><span>Sem estado</span></span></div></div>
+ <div class="camhead"><span id="badge1" class="pill">PARADA</span><span id="mode1" class="hint">À espera de resposta</span></div>
+ <div class="preview"><span id="placeholder1">À espera de imagem</span><img id="img1" alt="Imagem da Câmara 1" hidden></div>
+ <div id="state1" class="cam-state">Sem transmissão.</div>
+ <div class="actions"><button id="live1" class="live" disabled>Iniciar LIVE</button><button id="rec1" class="rec" disabled>Iniciar gravação</button><button id="flash1" class="flash" disabled>Acender flash</button></div>
+ <div class="record-tools"><div class="tools-title">Gravações e reprodução</div><div class="record-tools-actions"><button data-list="1" disabled>Ver gravações</button><button data-stopplay="1" disabled>Parar reprodução</button></div><div id="list1" class="recordings">Gravações não carregadas.</div></div>
+ <div class="system-tools"><div class="tools-title">Sistema</div><div class="system-tools-grid"><button data-status="1" disabled>STATUS</button><button data-reboot="1" class="danger" disabled>Reiniciar</button><button data-sleep="1" class="sleep-btn" disabled>Colocar em Sleep</button><button data-pir="1" class="secondary" disabled>Ativar PIR</button></div><div class="poll-setting"><label>Verificar login<select id="pollInterval1" disabled><option value="0">Sempre ligada</option><option value="10" selected>10 em 10 segundos</option><option value="20">20 em 20 segundos</option><option value="30">30 em 30 segundos</option><option value="60">60 em 60 segundos</option><option value="600">10 minutos</option></select></label><button data-poll-apply="1" disabled>Guardar</button></div><div id="diag1" class="diagnostic">Sem diagnóstico recebido.</div><div id="pollStatus1" class="poll-highlight">Verificação de login: 10 segundos</div></div>
+</article>
+<article class="camera" id="camera2">
+ <div class="camhead"><h3>Câmara 2</h3><div class="cam-status-right"><span id="online2" class="cam-online wait"><i class="dot"></i><span>Sem estado</span></span></div></div>
+ <div class="camhead"><span id="badge2" class="pill">PARADA</span><span id="mode2" class="hint">À espera de resposta</span></div>
+ <div class="preview"><span id="placeholder2">À espera de imagem</span><img id="img2" alt="Imagem da Câmara 2" hidden></div>
+ <div id="state2" class="cam-state">Sem transmissão.</div>
+ <div class="actions"><button id="live2" class="live" disabled>Iniciar LIVE</button><button id="rec2" class="rec" disabled>Iniciar gravação</button><button id="flash2" class="flash" disabled>Acender flash</button></div>
+ <div class="record-tools"><div class="tools-title">Gravações e reprodução</div><div class="record-tools-actions"><button data-list="2" disabled>Ver gravações</button><button data-stopplay="2" disabled>Parar reprodução</button></div><div id="list2" class="recordings">Gravações não carregadas.</div></div>
+ <div class="system-tools"><div class="tools-title">Sistema</div><div class="system-tools-grid"><button data-status="2" disabled>STATUS</button><button data-reboot="2" class="danger" disabled>Reiniciar</button><button data-sleep="2" class="sleep-btn" disabled>Colocar em Sleep</button><button data-pir="2" class="secondary" disabled>Ativar PIR</button></div><div class="poll-setting"><label>Verificar login<select id="pollInterval2" disabled><option value="0">Sempre ligada</option><option value="10" selected>10 em 10 segundos</option><option value="20">20 em 20 segundos</option><option value="30">30 em 30 segundos</option><option value="60">60 em 60 segundos</option><option value="600">10 minutos</option></select></label><button data-poll-apply="2" disabled>Guardar</button></div><div id="diag2" class="diagnostic">Sem diagnóstico recebido.</div><div id="pollStatus2" class="poll-highlight">Verificação de login: 10 segundos</div></div>
+</article>
+</div>
+</section>
+
+<section class="card"><h2>Comandos adicionais</h2><div class="extra"><button data-command="BOTAO_1" disabled>Botão 1</button><button data-command="BOTAO_2" disabled>Botão 2</button><button data-command="BOTAO_3" disabled>Botão 3</button></div></section>
+<div class="footer">As duas câmaras usam o mesmo firmware. Configura CAMERA_ID=1 na primeira e CAMERA_ID=2 na segunda.</div>
+</main>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script>
+(()=>{
+'use strict';
+const MQTT_HOST='r4621d43.ala.eu-central-1.emqxsl.com',MQTT_PORT=8084;
+let client=null,selection='1',heartbeatTimer=null,statusTimer=null,presenceTimer=null,sessionPresenceTopic=null,loginWakeSent=false;
+const cams={
+ '1':{base:'jogo/camera1',live:false,rec:false,play:false,flash:false,pir:false,listMode:false,url:null,lastStatus:0,online:false,sleeping:false,sleepKnown:false,waking:false,autoWakePending:false},
+ '2':{base:'jogo/camera2',live:false,rec:false,play:false,flash:false,pir:false,listMode:false,url:null,lastStatus:0,online:false,sleeping:false,sleepKnown:false,waking:false,autoWakePending:false}
+};
+const $=id=>document.getElementById(id),feedback=$('feedback');
+function say(text){feedback.textContent=text}
+function topics(id){const b=cams[id].base;return{control:b+'/controlo',frame:b+'/frame',play:b+'/reproducao/frame',reply:b+'/resposta',manualSleep:b+'/sono/manual',sleepState:b+'/sono/estado',pollInterval:b+'/sono/intervalo'}}
+function selectedIds(){return selection==='both'?['1','2']:[selection]}
+function send(id,cmd,allowOffline=false){if(!client||!client.connected){say('Sem ligação MQTT.');return false}if(!allowOffline&&!cams[id].online){say('A Câmara '+id+' não está Online. Comandos bloqueados.');return false}client.publish(topics(id).control,cmd,{qos:0,retain:false},err=>{if(err)say('Falha ao enviar '+cmd+' para a Câmara '+id+'.')});return true}
+function setMqttStatus(text,on=false){$('mqttStatusText').textContent=text;$('mqttStatus').classList.toggle('on',on)}
+function refreshControls(){
+ const mqttOn=!!(client&&client.connected);
+ $('connect').disabled=!!client;$('disconnect').disabled=!client;
+ document.querySelectorAll('[data-select]').forEach(b=>b.disabled=!mqttOn);
+ Object.keys(cams).forEach(id=>{
+  const c=cams[id],ready=mqttOn&&c.online;
+  ['live'+id,'rec'+id,'flash'+id,'pollInterval'+id].forEach(key=>{if($(key))$(key).disabled=!ready});
+  const pirButton=document.querySelector('[data-pir="'+id+'"]');if(pirButton){pirButton.disabled=!ready;pirButton.textContent=c.pir?'Desativar PIR':'Ativar PIR';pirButton.classList.toggle('active',c.pir)}
+  document.querySelectorAll('[data-list="'+id+'"],[data-stopplay="'+id+'"],[data-status="'+id+'"],[data-reboot="'+id+'"],[data-poll-apply="'+id+'"]').forEach(b=>b.disabled=!ready);
+  const sleepButton=document.querySelector('[data-sleep="'+id+'"]');
+  // O botão Sleep/Acordar é a única exceção; durante um despertar pendente fica apenas indicativo.
+  if(sleepButton)sleepButton.disabled=!(mqttOn&&!c.waking&&(c.online||c.sleeping));
+  document.querySelectorAll('#list'+id+' button').forEach(b=>b.disabled=!ready);
+ });
+ const selectedReady=mqttOn&&selectedIds().every(id=>cams[id].online);
+ $('applySettings').disabled=!selectedReady;
+ ['resolution','quality','fps'].forEach(id=>$(id).disabled=!selectedReady);
+ // Comandos adicionais só ficam disponíveis quando ambas as câmaras estão confirmadas Online.
+ document.querySelectorAll('[data-command]').forEach(b=>b.disabled=!(mqttOn&&Object.keys(cams).every(id=>cams[id].online)));
+}
+function setConnected(on){
+ if(!on){Object.keys(cams).forEach(id=>{cams[id].online=false;cams[id].lastStatus=0;updateCamOnline(id,'off','Offline')});}
+ refreshControls();
+}
+function updateCamOnline(id,mode,text){const el=$('online'+id);el.className='cam-online '+mode;el.querySelector('span').textContent=text}
+function renderCamera(id){const c=cams[id];$('badge'+id).textContent=c.rec?'A GRAVAR':c.live?'LIVE':c.play?'A REPRODUZIR':'PARADA';$('badge'+id).className='pill'+(c.rec?' recording':(c.live?' active':''));$('live'+id).textContent=c.live?'Parar LIVE':'Iniciar LIVE';$('live'+id).classList.toggle('active',c.live);$('rec'+id).textContent=c.rec?'Parar gravação':'Iniciar gravação';$('rec'+id).classList.toggle('active',c.rec);$('flash'+id).textContent=c.flash?'Apagar flash':'Acender flash';$('flash'+id).classList.toggle('active',c.flash);refreshControls()}
+function renderSleepButton(id){const c=cams[id],b=document.querySelector('[data-sleep="'+id+'"]');if(!b)return;b.textContent=c.waking?'A acordar...':(c.sleeping?'Acordar':'Colocar em Sleep');b.classList.toggle('sleeping',c.sleeping&&!c.waking);b.classList.toggle('waking',c.waking);refreshControls()}
+function setSleepState(id,sleeping,confirmedOnline=false){
+ const c=cams[id];c.sleepKnown=true;c.sleeping=sleeping;
+ if(sleeping){
+  c.online=false;c.waking=!!c.autoWakePending;
+  updateCamOnline(id,c.waking?'wait':'off',c.waking?'A acordar':'Em Sleep');
+  $('state'+id).textContent=c.waking?'Login detetado. A câmara acordará na próxima verificação.':'Câmara em Deep Sleep. O sensor está desligado.';
+ }else{
+  c.online=!!confirmedOnline;c.waking=false;c.autoWakePending=false;
+  updateCamOnline(id,c.online?'on':'wait',c.online?'Online':'A verificar');
+  $('state'+id).textContent='Ligação MQTT restabelecida. Sensor desligado até LIVE/gravação.';
+ }
+ renderSleepButton(id);refreshControls();
+}
+function publishPresence(active){if(!client||!client.connected||!sessionPresenceTopic)return;client.publish(sessionPresenceTopic,active?'1':'',{qos:1,retain:true})}
+function clearManualSleepForLogin(){
+ if(!client||!client.connected)return;
+ Object.keys(cams).forEach(id=>{
+  const c=cams[id],t=topics(id);c.autoWakePending=true;
+  if(c.sleepKnown&&c.sleeping){c.waking=true;updateCamOnline(id,'wait','A acordar');renderSleepButton(id)}
+  // O login limpa a suspensão manual retida. A indicação visual "A acordar" não publica nada.
+  client.publish(t.manualSleep,'0',{qos:1,retain:true},err=>{if(err)say('Não foi possível libertar a suspensão manual da Câmara '+id+'.')});
+ });
+ refreshControls();
+}
+function setManualSleep(id,sleeping){
+ if(!client||!client.connected){say('Sem ligação MQTT.');return}
+ const c=cams[id],t=topics(id);
+ if(sleeping&&!c.online){say('A Câmara '+id+' tem de estar Online para entrar em Sleep.');return}
+ if(sleeping){c.sleeping=true;c.waking=false;c.autoWakePending=false;c.online=false;updateCamOnline(id,'off','A entrar em Sleep')}
+ else{c.autoWakePending=true;c.waking=true}
+ renderSleepButton(id);
+ client.publish(t.manualSleep,sleeping?'1':'0',{qos:1,retain:true},err=>{
+  if(err){c.waking=false;c.autoWakePending=false;if(sleeping){c.sleeping=false;c.online=false}renderSleepButton(id);say('Não foi possível alterar o Sleep da Câmara '+id+'.');return}
+  say(sleeping?'Pedido de Sleep enviado para a Câmara '+id+'.':'Pedido para acordar a Câmara '+id+' enviado.');
+ });
+}
+function applyPollInterval(id){if(!client||!client.connected){say('Sem ligação MQTT.');return}const seconds=Number($('pollInterval'+id).value);client.publish(topics(id).pollInterval,String(seconds),{qos:1,retain:true},err=>{if(err)say('Não foi possível guardar o intervalo da Câmara '+id+'.');else{say('Intervalo de verificação da Câmara '+id+' atualizado. Se estiver em Deep Sleep, a nova frequência entra em vigor no próximo despertar.');}});}
+function pollLabel(seconds){const n=Number(seconds);if(n===0)return 'Sempre ligada';if(n===600)return '10 minutos';return n+' segundos'}
+
+function heartbeat(){if(!client||!client.connected)return;Object.keys(cams).forEach(id=>{const c=cams[id];if(c.live||c.rec||c.play)send(id,'PING')})}
+function pollStatus(){if(!client||!client.connected)return;Object.keys(cams).forEach(id=>{const c=cams[id],age=Date.now()-c.lastStatus;if(!c.lastStatus){c.online=false;updateCamOnline(id,'wait',c.waking?'A acordar':'À espera')}else if(age>35000){c.online=false;updateCamOnline(id,c.waking?'wait':'off',c.waking?'A acordar':'Sem resposta')}send(id,'STATUS',true)});refreshControls()}
+function frame(id,payload,isPlayback){const c=cams[id],img=$('img'+id);if(c.url)URL.revokeObjectURL(c.url);c.url=URL.createObjectURL(new Blob([payload],{type:'image/jpeg'}));img.onload=()=>{img.hidden=false;$('placeholder'+id).hidden=true};img.onerror=()=>{$('state'+id).textContent='Não foi possível descodificar a imagem.'};img.src=c.url;$('state'+id).textContent=(isPlayback?'A reproduzir gravação':'Imagem LIVE recebida')+' · '+new Date().toLocaleTimeString()}
+function addRecording(id,name,count){const item=document.createElement('div');item.className='recitem';const label=document.createElement('span');label.textContent=name+' · '+count+' frames';const play=document.createElement('button');play.textContent='Reproduzir';play.onclick=()=>{if(!cams[id].online)return;cams[id].play=true;renderCamera(id);send(id,'PLAY|'+name);$('state'+id).textContent='A iniciar reprodução de '+name};const del=document.createElement('button');del.className='delete';del.textContent='Apagar';del.onclick=()=>{if(!cams[id].online)return;if(confirm('Apagar definitivamente '+name+' da Câmara '+id+'?'))send(id,'DELETE|'+name)};play.disabled=del.disabled=!cams[id].online;item.append(label,play,del);$('list'+id).append(item);refreshControls()}
+function parseFields(parts){const o={};parts.forEach(part=>{const i=part.indexOf('=');if(i>0)o[part.slice(0,i)]=part.slice(i+1)});return o}
+function handleStatus(id,msg){
+ const c=cams[id],v=parseFields(msg.split('|').slice(1));
+ c.lastStatus=Date.now();
+ if(v.wifi==='1'&&v.mqtt==='1'){setSleepState(id,false,true)}else{c.online=false;updateCamOnline(id,c.waking?'wait':'off',c.waking?'A acordar':'Sem ligação');refreshControls()}
+ c.live=v.live==='1';c.rec=v.rec==='1';c.play=v.play==='1';
+ // Mantem o valor internamente para sincronizar o botao do flash,
+ // sem apresentar o estado do flash no relatorio STATUS.
+ c.flash=v.flash==='1';
+ c.pir=v.pir==='1';
+ renderCamera(id);
+ const pollSeconds=Number(v.poll_s===undefined?10:v.poll_s);
+ $('pollInterval'+id).value=String(pollSeconds);
+ $('pollStatus'+id).textContent='Verificação de login: '+pollLabel(pollSeconds)+' · Sensor: '+(v.sensor==='1'?'ligado':'desligado');
+ updateCamOnline(id,c.online?'on':'off',c.online?'Online':'Sem ligação');
+ $('mode'+id).textContent=(v.wifi==='1'?'Wi-Fi':'Sem Wi-Fi')+' · '+(v.rssi||'?')+' dBm';
+
+ const mb=n=>Number(n||0).toLocaleString('pt-PT')+' MB';
+ const cardMB=Number(v.card_mb||0);
+ const fsMB=Number(v.fs_mb||0);
+ const usedMB=Number(v.used_mb||0);
+ const freeMB=Number(v.free_mb||0);
+ const res=v.resolution||'?';
+ let cardWarning='';
+ if(v.sd!=='1'){
+   cardWarning='\nCartão microSD indisponível.';
+ } else if(cardMB>0 && fsMB>0 && fsMB < cardMB*0.95){
+   cardWarning='\nATENÇÃO: SD FULL!!.';
+ }
+ $('diag'+id).textContent=
+   'Wi-Fi: '+(v.wifi==='1'?'ligado':'desligado')+
+   ' ('+(v.rssi||'?')+' dBm) · MQTT: '+(v.mqtt==='1'?'ligado':'desligado')+
+   '\nSensor da câmara: '+(v.sensor==='1'?'ligado':'desligado')+
+   '\nImagem: '+res+' · JPEG '+(v.quality||'?')+' · '+(v.fps||'?')+' FPS'+
+   '\nCapacidade física: '+(cardMB?mb(cardMB):'n/d')+
+   '\nEspaço total ocupado: '+(v.sd==='1'?mb(usedMB):'n/d')+
+   '\nEspaço livre utilizável: '+(v.sd==='1'?mb(freeMB):'n/d')+
+   '\nGravações: '+(v.recordings||'0')+
+   cardWarning+
+   '\nUptime: '+(v.uptime_s||'?')+' s · RAM livre: '+(v.heap||'?')+' bytes';
+}
+function handleReply(id,msg){const c=cams[id];if(msg==='SLEEP_STATE|1'){setSleepState(id,true);return}if(msg==='SLEEP_STATE|0'){setSleepState(id,false,false);send(id,'STATUS',true);return}if(msg.startsWith('POLL_INTERVAL|')){$('pollInterval'+id).value=msg.split('|')[1];$('pollStatus'+id).textContent='Verificação de login: '+pollLabel(msg.split('|')[1]);return}if(msg.startsWith('STATUS|')){handleStatus(id,msg);return}if(msg.startsWith('PIR_STATE|')){cams[id].pir=msg.split('|')[1]==='1';refreshControls();say('PIR da Câmara '+id+': '+(cams[id].pir?'ativado':'desativado')+'.');return}if(msg==='LIST_BEGIN'){c.listMode=true;$('list'+id).replaceChildren();return}if(msg.startsWith('REC|')&&c.listMode){const p=msg.split('|');addRecording(id,p[1],p[2]||'?');return}if(msg==='LIST_END'){c.listMode=false;if(!$('list'+id).children.length)$('list'+id).textContent='Sem gravações.';return}
+if(msg==='LIVE_STARTED'){c.live=true;$('state'+id).textContent='Transmissão LIVE ativa'}else if(msg==='LIVE_STOPPED'){c.live=false;$('state'+id).textContent='Transmissão parada'}else if(msg.startsWith('REC_STARTED')){c.rec=true;$('state'+id).textContent='Gravação em curso'}else if(msg.startsWith('REC_STOPPED')){c.rec=false;$('state'+id).textContent='Gravação terminada'}else if(msg.startsWith('PLAY_STARTED')){c.play=true;$('state'+id).textContent='A reproduzir'}else if(msg.startsWith('PLAY_ENDED')||msg==='PLAY_STOPPED'){c.play=false;$('state'+id).textContent='Reprodução parada/terminada'}else if(msg==='FLASH_ON'){c.flash=true}else if(msg==='FLASH_OFF'){c.flash=false}else if(msg==='REBOOTING'){c.online=false;updateCamOnline(id,'wait','A reiniciar');refreshControls();say('A Câmara '+id+' está a reiniciar.')}else if(msg.startsWith('DELETE_OK|')){say('Câmara '+id+': gravação apagada.');send(id,'LIST')}else if(msg.startsWith('SIZE_SET|')){say('Câmara '+id+': resolução aplicada ('+msg.split('|')[1]+').')}else if(msg.startsWith('FPS_SET|')){say('Câmara '+id+': FPS atualizados.')}else if(msg.startsWith('QUALITY_SET|')){say('Câmara '+id+': qualidade JPEG atualizada.')}else if(msg==='ERROR|RESOLUTION_NEEDS_PSRAM'){say('Câmara '+id+': esta placa não detetou PSRAM; usa QVGA ou VGA.')}else if(msg.startsWith('ERROR|')){say('Câmara '+id+': '+msg)}renderCamera(id)}
+$('connect').onclick=()=>{
+ const username=$('username').value.trim(),password=$('password').value;
+ if(!username||!password){say('Preenche o utilizador e a password MQTT.');return}
+ if(typeof mqtt==='undefined'){say('A biblioteca MQTT não carregou. Verifica a ligação à Internet.');return}
+ if(client){const previous=client;if(previous.connected&&sessionPresenceTopic){const previousTopic=sessionPresenceTopic;previous.publish(previousTopic,'',{qos:1,retain:true},()=>previous.end(true))}else previous.end(true)}
+ setMqttStatus('A ligar...');$('connect').disabled=true;$('disconnect').disabled=false;loginWakeSent=false;
+ const webClientId='WEB_DUAL_'+Math.random().toString(16).slice(2,12);
+ sessionPresenceTopic='jogo/utilizadores/'+webClientId+'/estado';
+ client=mqtt.connect(`wss://${MQTT_HOST}:${MQTT_PORT}/mqtt`,{clientId:webClientId,username,password,clean:true,connectTimeout:10000,reconnectPeriod:3000,keepalive:30,will:{topic:sessionPresenceTopic,payload:'0',qos:1,retain:true}});
+ const activeClient=client;
+ activeClient.on('connect',()=>{if(client!==activeClient)return;
+  setMqttStatus('Ligado ao EMQX',true);setConnected(true);
+  publishPresence(true);
+  if(!loginWakeSent){loginWakeSent=true;clearManualSleepForLogin()}
+  if(presenceTimer)clearInterval(presenceTimer);presenceTimer=setInterval(()=>publishPresence(true),15000);
+  const subs=[];Object.keys(cams).forEach(id=>{const t=topics(id);subs.push(t.frame,t.play,t.reply,t.sleepState)});
+  activeClient.subscribe([...subs,'jogo/botao'],err=>{if(err)say('Ligado, mas houve erro ao subscrever os tópicos.')});
+  say('Ligação MQTT estabelecida. Presença publicada; a verificar as duas câmaras...');
+  Object.keys(cams).forEach(id=>send(id,'STATUS',true));
+  if(heartbeatTimer)clearInterval(heartbeatTimer);if(statusTimer)clearInterval(statusTimer);
+  heartbeatTimer=setInterval(heartbeat,10000);statusTimer=setInterval(pollStatus,20000);refreshControls();
+ });
+activeClient.on('message',(topic,payload)=>{if(client!==activeClient)return;for(const id of ['1','2']){const t=topics(id),c=cams[id],msg=payload.toString();if(topic===t.sleepState){if(msg==='SLEEP_STATE|1')setSleepState(id,true);else if(msg==='SLEEP_STATE|0'){setSleepState(id,false,false);send(id,'STATUS',true)}return}if(topic===t.frame&&c.live){frame(id,payload,false);return}if(topic===t.play&&c.play){frame(id,payload,true);return}if(topic===t.reply){handleReply(id,msg);return}}});activeClient.on('reconnect',()=>{if(client!==activeClient)return;setMqttStatus('A restabelecer ligação...');setConnected(false)});activeClient.on('offline',()=>{if(client!==activeClient)return;setMqttStatus('Ligação perdida');setConnected(false)});activeClient.on('close',()=>{if(client!==activeClient)return;setMqttStatus('MQTT desligado');setConnected(false)});activeClient.on('error',()=>{if(client!==activeClient)return;say('Erro MQTT: confirma as credenciais e a ligação.');setConnected(false)})};
+$('disconnect').onclick=()=>{
+ const oldClient=client,oldTopic=sessionPresenceTopic;client=null;sessionPresenceTopic=null;loginWakeSent=false;
+ if(presenceTimer)clearInterval(presenceTimer);if(heartbeatTimer)clearInterval(heartbeatTimer);if(statusTimer)clearInterval(statusTimer);
+ if(oldClient){if(oldClient.connected&&oldTopic)oldClient.publish(oldTopic,'',{qos:1,retain:true},()=>oldClient.end(false));else oldClient.end(true)}
+ Object.keys(cams).forEach(id=>{cams[id].autoWakePending=false;cams[id].waking=false});
+ setConnected(false);setMqttStatus('MQTT desligado');say('Ligação terminada. As câmaras deixarão de receber a presença deste separador.');
+};
+document.querySelectorAll('[data-select]').forEach(b=>b.onclick=()=>{selection=b.dataset.select;document.querySelectorAll('[data-select]').forEach(x=>x.classList.toggle('selected',x===b));say('Seleção: '+(selection==='both'?'ambas as câmaras':'Câmara '+selection))});
+['1','2'].forEach(id=>{$('live'+id).onclick=()=>send(id,cams[id].live?'STOP':'START');$('rec'+id).onclick=()=>send(id,cams[id].rec?'REC_STOP':'REC_START');$('flash'+id).onclick=()=>send(id,cams[id].flash?'FLASH_OFF':'FLASH_ON')});
+$('applySettings').onclick=()=>{const ids=selectedIds();if(!ids.every(id=>cams[id].online)){say('Definições bloqueadas: todas as câmaras selecionadas têm de estar Online.');return}const fps=Number($('fps').value),quality=Number($('quality').value),size=$('resolution').value;if(!Number.isInteger(fps)||fps<1||fps>30){say('FPS tem de estar entre 1 e 30.');return}if(!Number.isInteger(quality)||quality<10||quality>63){say('Qualidade JPEG tem de estar entre 10 e 63.');return}ids.forEach(id=>{send(id,'FPS|'+fps);send(id,'QUALITY|'+quality);send(id,'SIZE|'+size)});say('Definições enviadas para '+(selection==='both'?'as duas câmaras':'Câmara '+selection)+'.')};
+document.querySelectorAll('[data-list]').forEach(b=>b.onclick=()=>{const id=b.dataset.list;if(!cams[id].online)return;$('list'+id).replaceChildren();cams[id].listMode=true;send(id,'LIST')});document.querySelectorAll('[data-stopplay]').forEach(b=>b.onclick=()=>{const id=b.dataset.stopplay;if(cams[id].online)send(id,'PLAY_STOP')});
+document.querySelectorAll('[data-status]').forEach(b=>b.onclick=()=>{const id=b.dataset.status;if(cams[id].online)send(id,'STATUS')});document.querySelectorAll('[data-reboot]').forEach(b=>b.onclick=()=>{const id=b.dataset.reboot;if(!cams[id].online)return;if(confirm('Reiniciar remotamente a Câmara '+id+'? A ligação ficará interrompida durante o arranque.'))send(id,'REBOOT')});
+document.querySelectorAll('[data-sleep]').forEach(b=>b.onclick=()=>{const id=b.dataset.sleep;const c=cams[id];if(c.waking)return;if(c.sleeping)setManualSleep(id,false);else if(c.online)setManualSleep(id,true)});
+document.querySelectorAll('[data-pir]').forEach(b=>b.onclick=()=>{const id=b.dataset.pir;if(cams[id].online)send(id,cams[id].pir?'PIR_OFF':'PIR_ON')});
+document.querySelectorAll('[data-poll-apply]').forEach(b=>b.onclick=()=>{const id=b.dataset.pollApply;if(cams[id].online)applyPollInterval(id)});
+window.addEventListener('beforeunload',()=>{if(client&&client.connected&&sessionPresenceTopic)client.publish(sessionPresenceTopic,'',{qos:1,retain:true})});
+document.querySelectorAll('[data-command]').forEach(b=>b.onclick=()=>{if(client&&client.connected&&Object.keys(cams).every(id=>cams[id].online))client.publish('jogo/botao',b.dataset.command);else say('As duas câmaras têm de estar Online para enviar este comando.')});
+setConnected(false);Object.keys(cams).forEach(id=>{renderCamera(id);renderSleepButton(id)});refreshControls();
+})();
+</script>
+</body></html>
